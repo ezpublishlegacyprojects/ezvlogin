@@ -50,6 +50,17 @@ $ViewList['login'] = array(
                                                          'UserRedirectURI' => 'RedirectURI' ) ),
     'params' => array( ) );
 
+
+$ViewList['edit'] = array(
+    'functions' => array( 'login' ),
+    'script' => 'edit.php',
+    'ui_context' => 'edit',
+    'single_post_actions' => array( 'ChangePasswordButton' => 'ChangePassword',
+                                    'ChangeSettingButton' => 'ChangeSetting',
+                                    'CancelButton' => 'Cancel',
+                                    'EditButton' => 'Edit' ),
+    'params' => array( 'UserID' ) );
+
 $SiteAccess = array(
     'name'=> 'SiteAccess',
     'values'=> array(),
