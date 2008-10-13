@@ -4,8 +4,8 @@
 //
 // ## BEGIN COPYRIGHT, LICENSE AND WARRANTY NOTICE ##
 // SOFTWARE NAME: eZ Publish
-// SOFTWARE RELEASE: 4.0.x
-// COPYRIGHT NOTICE: Copyright (C) 1999-2007 eZ Systems AS
+// SOFTWARE RELEASE: 4.1.x
+// COPYRIGHT NOTICE: Copyright (C) 1999-2008 eZ Systems AS
 // SOFTWARE LICENSE: GNU General Public License v2.0
 // NOTICE: >
 //   This program is free software; you can redistribute it and/or
@@ -31,6 +31,8 @@
 require_once( 'kernel/common/template.php' );
 //include_once( 'lib/ezutils/classes/ezini.php' );
 //include_once( 'kernel/classes/datatypes/ezuser/ezuserloginhandler.php' );
+
+include_once( 'extension/ezvlogin/classes/ezvloginhelper.php' );
 
 //$Module->setExitStatus( EZ_MODULE_STATUS_SHOW_LOGIN_PAGE );
 
@@ -60,15 +62,31 @@ if ( $http->hasSessionVariable( '$_POST_BeforeLogin' ) )
     $http->removeSessionVariable( '$_POST_BeforeLogin' );
 }
 
+// Accept Get parameters in case of SSO login
+if ( $http->hasGetVariable( 'UserLogin' ) )
+{
+	$Module->setCurrentAction( 'Login' );
+	$http->setPostVariable( 'Login', $http->getVariable( 'UserLogin' ) );
+	$http->setPostVariable( 'Password', $http->getVariable( 'UserPassword' ) );
+	$http->setPostVariable( 'RedirectURI', $http->getVariable( 'UserRedirectURI' ) );
+}
+
+// try to login user if action is Login
 if ( $Module->isCurrentAction( 'Login' ) and
      $Module->hasActionParameter( 'UserLogin' ) and
      $Module->hasActionParameter( 'UserPassword' ) and
-     !$http->hasPostVariable( "RegisterButton" )
+     !$http->hasPostVariable( 'RegisterButton' )
      )
 {
     $userLogin = $Module->actionParameter( 'UserLogin' );
     $userPassword = $Module->actionParameter( 'UserPassword' );
     $userRedirectURI = $Module->actionParameter( 'UserRedirectURI' );
+
+	// check if we're back from a SSO redirection loop
+    if ( ($redirectionURI = eZVLoginHelper::isSSOStart( $Module )) !== false )
+    {
+    	return $Module->redirectTo( $redirectionURI );
+    }
 
     if ( trim( $userRedirectURI ) == "" )
     {
@@ -77,13 +95,21 @@ if ( $Module->isCurrentAction( 'Login' ) and
         if ( !$requireUserLogin )
         {
             if ( $http->hasSessionVariable( "LastAccessesURI" ) )
+            {
                 $userRedirectURI = $http->sessionVariable( "LastAccessesURI" );
+                eZDebug::writeNotice( 'LastAccessesURI = ' . $userRedirectURI, 'vuser/login' ); 
+            }
         }
 
         if ( $http->hasSessionVariable( "RedirectAfterLogin" ) )
         {
             $userRedirectURI = $http->sessionVariable( "RedirectAfterLogin" );
+            eZDebug::writeNotice( 'RedirectAfterLogin = ' . $userRedirectURI, 'vuser/login' ); 
         }
+    }
+    else
+    {
+    	eZDebug::writeNotice( 'UserRedirectURI = ' . $userRedirectURI, 'vuser/login' ); 
     }
     // Save array of previous post variables in session variable
     $post = $http->attribute( 'post' );
@@ -125,16 +151,13 @@ if ( $Module->isCurrentAction( 'Login' ) and
             $user = $userClass->loginUser( $userLogin, $userPassword );
             if ( $user instanceof eZUser )
             {
-                $uri = eZURI::instance( eZSys::requestURI() );
-                $access = accessType( $uri,
-                                      eZSys::hostname(),
-                                      eZSys::serverPort(),
-                                      eZSys::indexFile() );
+                $access = $GLOBALS['eZCurrentAccess'];
                 $siteAccessResult = $user->hasAccessTo( 'user', 'login' );
                 $hasAccessToSite = false;
                 // A check that the user has rights to access current siteaccess.
                 if ( $siteAccessResult[ 'accessWord' ] == 'limited' )
                 {
+                    $siteNameCRC = eZSys::ezcrc32( $access[ 'name' ] );
                     //include_once( 'lib/ezutils/classes/ezsys.php' );
 
                     $policyChecked = false;
@@ -143,7 +166,7 @@ if ( $Module->isCurrentAction( 'Login' ) and
                         if ( isset( $policy['SiteAccess'] ) )
                         {
                             $policyChecked = true;
-                            if ( in_array( eZSys::ezcrc32( $access[ 'name' ] ), $policy['SiteAccess'] ) )
+                            if ( in_array( $siteNameCRC, $policy['SiteAccess'] ) )
                             {
                                 $hasAccessToSite = true;
                                 break;
@@ -184,7 +207,10 @@ if ( $Module->isCurrentAction( 'Login' ) and
     $haveRedirectionURI = ( $redirectionURI != '' && $redirectionURI != '/' );
 
     if ( !$haveRedirectionURI )
+    {
         $redirectionURI = $ini->variable( 'SiteSettings', 'DefaultPage' );
+        eZDebug::writeNotice( 'DefaultPage = ' . $redirectionURI, 'vuser/login' ); 
+    }
 
     /* If the user has successfully passed authorization
      * and we don't know redirection URI yet.
@@ -287,11 +313,8 @@ if ( $Module->isCurrentAction( 'Login' ) and
         $userID = $user->id();
     if ( $userID > 0 )
     {
-        $vIni = eZINI::instance( 'vlogin.ini.append.php' );
-        setcookie( $vIni->variable( 'VarnishLoginSettings', 'VarnishCookieName' ),
-                   $vIni->variable( 'VarnishLoginSettings', 'VarnishCookieValue' ),
-                   0,
-                   '/' );
+        // Set eZVLogin cookies
+        eZVLoginHelper::setUserCookie( $user, $user->attribute('contentobject')->attribute('name') );
 
         if ( $http->hasPostVariable( 'Cookie' ) )
         {
@@ -314,7 +337,9 @@ if ( $Module->isCurrentAction( 'Login' ) and
         // Remove all temporary drafts
         //include_once( 'kernel/classes/ezcontentobject.php' );
         eZContentObject::cleanupAllInternalDrafts( $userID );
-        return $Module->redirectTo( $redirectionURI );
+
+		// check if we're should do SSO or just do a normal redirect
+        return eZVLoginHelper::doSSORedirect( $Module, $redirectionURI );
     }
 }
 else
@@ -325,9 +350,12 @@ else
     {
         $requestedModule = $requestedURI->element( 0, false );
         $requestedView = $requestedURI->element( 1, false );
-        if ( $requestedModule != 'user' or
+        if ( $requestedModule != 'vlogin' or
              $requestedView != 'login' )
+        {
             $userRedirectURI = $requestedURI->originalURIString( false );
+			eZDebug::writeNotice( 'originalURIString = ' . $userRedirectURI, 'vuser/login' );
+        }
     }
 }
 

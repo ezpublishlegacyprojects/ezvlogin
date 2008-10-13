@@ -4,8 +4,8 @@
 //
 // ## BEGIN COPYRIGHT, LICENSE AND WARRANTY NOTICE ##
 // SOFTWARE NAME: eZ Publish
-// SOFTWARE RELEASE: 4.0.x
-// COPYRIGHT NOTICE: Copyright (C) 1999-2007 eZ Systems AS
+// SOFTWARE RELEASE: 4.1.x
+// COPYRIGHT NOTICE: Copyright (C) 1999-2008 eZ Systems AS
 // SOFTWARE LICENSE: GNU General Public License v2.0
 // NOTICE: >
 //   This program is free software; you can redistribute it and/or
@@ -28,29 +28,34 @@
 
 //include_once( "lib/ezutils/classes/ezhttptool.php" );
 //include_once( "kernel/classes/datatypes/ezuser/ezuser.php" );
+include_once( 'extension/ezvlogin/classes/ezvloginhelper.php' );
 
-$http = eZHTTPTool::instance();
+$Module = $Params['Module'];
 
-$user = eZUser::instance();
+// check if we're back from a SSO redirection loop
+if ( ($redirectionURI = eZVLoginHelper::isSSOStart( $Module )) !== false )
+{
+	return $Module->redirectTo( $redirectionURI );
+}
+
+$ini    = eZINI::instance();
+$user   = eZUser::instance();
+$http   = eZHTTPTool::instance();
 
 // Remove all temporary drafts
 //include_once( 'kernel/classes/ezcontentobject.php' );
 eZContentObject::cleanupAllInternalDrafts( $user->attribute( 'contentobject_id' ) );
 
+// Remove eZVLogin cookies
+eZVLoginHelper::setUserCookie( $user );
+
 $user->logoutCurrent();
 
 $http->setSessionVariable( 'force_logout', 1 );
 
-$ini = eZINI::instance();
 $redirectURL = $ini->variable( 'UserSettings', 'LogoutRedirect' );
 
-$vIni = eZINI::instance( 'vlogin.ini.append.php' );
-        setcookie( $vIni->variable( 'VarnishLoginSettings', 'VarnishCookieName' ),
-                   $vIni->variable( 'VarnishLoginSettings', 'VarnishCookieValue' ),
-                   time() - 3600,
-                   '/' );
-
-
-return $Module->redirectTo( $redirectURL );
+// check if we're should do SSO or just do a normal redirect
+return eZVLoginHelper::doSSORedirect( $Module, $redirectURL );
 
 ?>
