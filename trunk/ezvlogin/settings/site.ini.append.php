@@ -6,8 +6,8 @@ AnonymousAccessList[]=vlogin
 [RoleSettings]
 PolicyOmitList[]=vlogin
 
-[UserSettings]
-LogoutRedirect=/vlogin/login
+#[UserSettings]
+#LogoutRedirect=/vlogin/login
 
 */
 ?>

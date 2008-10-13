@@ -2,6 +2,7 @@
 
 [ModuleSettings]
 ExtensionRepositories[]=ezvlogin
+ModuleList[]=vlogin
 
 */
 ?>
