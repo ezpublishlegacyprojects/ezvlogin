@@ -24,7 +24,7 @@
 // ## END COPYRIGHT, LICENSE AND WARRANTY NOTICE ##
 //
 
-class ezoeInfo
+class ezvloginInfo
 {
     static function info()
     {
