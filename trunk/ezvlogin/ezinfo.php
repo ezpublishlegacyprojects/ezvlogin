@@ -30,7 +30,7 @@ class ezvloginInfo
     {
         return array( 'Name'      => 'eZ Varnish Login',
                       'Version'   => '1.0.0',
-                      'Copyright' => 'Copyright (C) 2008 eZ Systems AS',
+                      'Copyright' => 'Copyright (C) 2008 eZ Systems AS / ar@ez.no, jr@ez.no',
                       'License'   => 'GNU General Public License v2.0',
                     );
     }
