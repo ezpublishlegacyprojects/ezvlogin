@@ -6,7 +6,7 @@ CookieName=is_logged_in
 CookieValue=true
 
 
-# Cached User Group mapping
+# (optional) Cached User Group mapping
 # Only to be used for low priviliges user groups
 # As in no more read access then non logged in users
 # Note: Cookie will only be set if user doesn't have
