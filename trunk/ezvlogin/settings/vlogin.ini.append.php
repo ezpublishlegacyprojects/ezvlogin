@@ -30,7 +30,7 @@ CookieValue=true
 # or in virtual host mode:
 # RedirectList[]=http://example.com
 # Note: all sites need to have this extension and same RedirectList setting
-# Note2: Uses GET parameters, so will not work on (fast)CGI setup
+# Note2: Uses GET parameters, so will not work on (fast)CGI setup unless in vhost setup
 #RedirectList[]
 #RedirectList[]=http://trunk:81
 #RedirectList[]=http://nor.trunk:81
