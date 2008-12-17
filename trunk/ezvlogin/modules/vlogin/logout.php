@@ -35,7 +35,9 @@ $Module = $Params['Module'];
 // check if we're back from a SSO redirection loop
 if ( ($redirectionURI = eZVLoginHelper::isSSOStart( $Module )) !== false )
 {
-	return $Module->redirectTo( $redirectionURI );
+	// Makes sure this is not cached by proxy
+    header( 'Cache-Control: no-cache, must-revalidate' );
+    return $Module->redirectTo( $redirectionURI );
 }
 
 $ini    = eZINI::instance();

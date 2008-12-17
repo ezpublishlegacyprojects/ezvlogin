@@ -66,8 +66,8 @@ if ( $http->hasSessionVariable( '$_POST_BeforeLogin' ) )
 if ( $http->hasGetVariable( 'UserLogin' ) )
 {
 	$Module->setCurrentAction( 'Login' );
-	$http->setPostVariable( 'Login', $http->getVariable( 'UserLogin' ) );
-	$http->setPostVariable( 'Password', $http->getVariable( 'UserPassword' ) );
+	$http->setPostVariable( 'Login', rawurldecode( $http->getVariable( 'UserLogin' ) ) );
+	$http->setPostVariable( 'Password', rawurldecode( $http->getVariable( 'UserPassword' ) ) );
 	$http->setPostVariable( 'RedirectURI', $http->getVariable( 'UserRedirectURI' ) );
 }
 
@@ -81,6 +81,9 @@ if ( $Module->isCurrentAction( 'Login' ) and
     $userLogin = $Module->actionParameter( 'UserLogin' );
     $userPassword = $Module->actionParameter( 'UserPassword' );
     $userRedirectURI = $Module->actionParameter( 'UserRedirectURI' );
+
+    // Makes sure this is not cached by proxy
+    header( 'Cache-Control: no-cache, must-revalidate' );
 
 	// check if we're back from a SSO redirection loop
     if ( ($redirectionURI = eZVLoginHelper::isSSOStart( $Module )) !== false )

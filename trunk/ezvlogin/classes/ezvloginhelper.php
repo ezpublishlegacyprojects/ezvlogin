@@ -113,8 +113,8 @@ class eZVLoginHelper
 			// Attach GET parameters to not lose the login parameters
 		    if ( $Module->isCurrentAction( 'Login' ) )
 		    {
-		    	$uri .= '/vlogin/login/?UserLogin=' . $Module->actionParameter( 'UserLogin' );
-    			$uri .= '&UserPassword=' . $Module->actionParameter( 'UserPassword' );
+		    	$uri .= '/vlogin/login/?UserLogin=' . rawurlencode( $Module->actionParameter( 'UserLogin' ) );
+    			$uri .= '&UserPassword=' . rawurlencode( $Module->actionParameter( 'UserPassword' ) );
     			$uri .= '&UserRedirectURI=' . $Module->actionParameter( 'UserRedirectURI' );
 		    }
 		    else
