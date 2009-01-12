@@ -327,10 +327,19 @@ if ( $Module->isCurrentAction( 'Login' ) and
                                  : false;
             if ( $rememberMeTimeout )
             {
-                $GLOBALS['RememberMeTimeout'] = $rememberMeTimeout;
-                eZSessionStop();
-                eZSessionStart();
-                unset( $GLOBALS['RememberMeTimeout'] );
+                if ( class_exists('eZSession') )
+                {
+                    // code for eZ Publish 4.1
+                    eZSession::stop();
+                    eZSession::start( $rememberMeTimeout );
+                }
+                else
+                {
+                    $GLOBALS['RememberMeTimeout'] = $rememberMeTimeout;
+                    eZSessionStop();
+                    eZSessionStart();
+                    unset( $GLOBALS['RememberMeTimeout'] );
+                }
             }
 
         }
