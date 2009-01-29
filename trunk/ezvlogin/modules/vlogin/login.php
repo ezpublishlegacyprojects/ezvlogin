@@ -100,19 +100,19 @@ if ( $Module->isCurrentAction( 'Login' ) and
             if ( $http->hasSessionVariable( "LastAccessesURI" ) )
             {
                 $userRedirectURI = $http->sessionVariable( "LastAccessesURI" );
-                eZDebug::writeNotice( 'LastAccessesURI = ' . $userRedirectURI, 'vuser/login' ); 
+                eZDebug::writeNotice( 'LastAccessesURI = ' . $userRedirectURI, 'vlogin/login' ); 
             }
         }
 
         if ( $http->hasSessionVariable( "RedirectAfterLogin" ) )
         {
             $userRedirectURI = $http->sessionVariable( "RedirectAfterLogin" );
-            eZDebug::writeNotice( 'RedirectAfterLogin = ' . $userRedirectURI, 'vuser/login' ); 
+            eZDebug::writeNotice( 'RedirectAfterLogin = ' . $userRedirectURI, 'vlogin/login' ); 
         }
     }
     else
     {
-    	eZDebug::writeNotice( 'UserRedirectURI = ' . $userRedirectURI, 'vuser/login' ); 
+    	eZDebug::writeNotice( 'UserRedirectURI = ' . $userRedirectURI, 'vlogin/login' ); 
     }
     // Save array of previous post variables in session variable
     $post = $http->attribute( 'post' );
@@ -212,7 +212,7 @@ if ( $Module->isCurrentAction( 'Login' ) and
     if ( !$haveRedirectionURI )
     {
         $redirectionURI = $ini->variable( 'SiteSettings', 'DefaultPage' );
-        eZDebug::writeNotice( 'DefaultPage = ' . $redirectionURI, 'vuser/login' ); 
+        eZDebug::writeNotice( 'DefaultPage = ' . $redirectionURI, 'vlogin/login' ); 
     }
 
     /* If the user has successfully passed authorization
@@ -366,7 +366,7 @@ else
              $requestedView != 'login' )
         {
             $userRedirectURI = $requestedURI->originalURIString( false );
-			eZDebug::writeNotice( 'originalURIString = ' . $userRedirectURI, 'vuser/login' );
+			eZDebug::writeNotice( 'originalURIString = ' . $userRedirectURI, 'vlogin/login' );
         }
     }
 }
