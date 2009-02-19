@@ -65,10 +65,10 @@ if ( $http->hasSessionVariable( '$_POST_BeforeLogin' ) )
 // Accept Get parameters in case of SSO login
 if ( $http->hasGetVariable( 'UserLogin' ) )
 {
-	$Module->setCurrentAction( 'Login' );
-	$http->setPostVariable( 'Login', rawurldecode( $http->getVariable( 'UserLogin' ) ) );
-	$http->setPostVariable( 'Password', rawurldecode( $http->getVariable( 'UserPassword' ) ) );
-	$http->setPostVariable( 'RedirectURI', $http->getVariable( 'UserRedirectURI' ) );
+    $Module->setCurrentAction( 'Login' );
+    $http->setPostVariable( 'Login', rawurldecode( $http->getVariable( 'UserLogin' ) ) );
+    $http->setPostVariable( 'Password', rawurldecode( $http->getVariable( 'UserPassword' ) ) );
+    $http->setPostVariable( 'RedirectURI', $http->getVariable( 'UserRedirectURI' ) );
 }
 
 // try to login user if action is Login
@@ -85,10 +85,10 @@ if ( $Module->isCurrentAction( 'Login' ) and
     // Makes sure this is not cached by proxy
     header( 'Cache-Control: no-cache, must-revalidate' );
 
-	// check if we're back from a SSO redirection loop
+    // check if we're back from a SSO redirection loop
     if ( ($redirectionURI = eZVLoginHelper::isSSOStart( $Module )) !== false )
     {
-    	return $Module->redirectTo( $redirectionURI );
+        return $Module->redirectTo( $redirectionURI );
     }
 
     if ( trim( $userRedirectURI ) == "" )
@@ -112,7 +112,7 @@ if ( $Module->isCurrentAction( 'Login' ) and
     }
     else
     {
-    	eZDebug::writeNotice( 'UserRedirectURI = ' . $userRedirectURI, 'vlogin/login' ); 
+        eZDebug::writeNotice( 'UserRedirectURI = ' . $userRedirectURI, 'vlogin/login' ); 
     }
     // Save array of previous post variables in session variable
     $post = $http->attribute( 'post' );
@@ -350,7 +350,7 @@ if ( $Module->isCurrentAction( 'Login' ) and
         //include_once( 'kernel/classes/ezcontentobject.php' );
         eZContentObject::cleanupAllInternalDrafts( $userID );
 
-		// check if we're should do SSO or just do a normal redirect
+        // check if we're should do SSO or just do a normal redirect
         return eZVLoginHelper::doSSORedirect( $Module, $redirectionURI );
     }
 }
@@ -366,7 +366,7 @@ else
              $requestedView != 'login' )
         {
             $userRedirectURI = $requestedURI->originalURIString( false );
-			eZDebug::writeNotice( 'originalURIString = ' . $userRedirectURI, 'vlogin/login' );
+            eZDebug::writeNotice( 'originalURIString = ' . $userRedirectURI, 'vlogin/login' );
         }
     }
 }
