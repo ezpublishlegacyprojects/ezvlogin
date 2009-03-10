@@ -1,7 +1,7 @@
 <?php /* #?ini charset="utf-8"?
 
 [LoginSettings]
-# Cookie name and value to be used as 'logedin' identifier (same as 4.1 support nativly)
+# Cookie name and value to be used as 'logedin' identifier ('is_logged_in' is same as 4.1 supports nativly)
 CookieName=is_logged_in
 CookieValue=true
 
