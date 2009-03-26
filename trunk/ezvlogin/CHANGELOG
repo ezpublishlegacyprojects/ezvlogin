@@ -21,3 +21,4 @@ eZVlogin CHANGELOG
 + rawurldecode / rawurlencode user name and password to avoid SSO breaking on user name with whitespace
 + Set cache-control to avoid proxy caching login / logout ( shoudl probably have a setting for this )
 + Added eZ Publish 4.1 support (look for 'eZSession' class)
++ Added support for view_parameters in vlogin/edit

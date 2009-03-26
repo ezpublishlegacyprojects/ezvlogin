@@ -39,6 +39,15 @@ $currentUserID = $currentUser->attribute( "contentobject_id" );
 $http = eZHTTPTool::instance();
 $Module = $Params['Module'];
 
+if ( isset( $Params['UserParameters'] ) )
+{
+    $UserParameters = $Params['UserParameters'];
+}
+else
+{
+    $UserParameters = array();
+}
+
 if ( isset( $Params["UserID"] ) )
     $UserID = $Params["UserID"];
 else if ( !$currentUser->isAnonymous() )
@@ -85,6 +94,7 @@ $tpl->setVariable( "module", $Module );
 $tpl->setVariable( "http", $http );
 $tpl->setVariable( "userID", $UserID );
 $tpl->setVariable( "userAccount", $userAccount );
+$tpl->setVariable( 'view_parameters', $UserParameters );
 
 $Result = array();
 $Result['content'] = $tpl->fetch( "design:user/edit.tpl" );
