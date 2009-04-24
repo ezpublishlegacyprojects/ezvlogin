@@ -95,6 +95,7 @@ $tpl->setVariable( "http", $http );
 $tpl->setVariable( "userID", $UserID );
 $tpl->setVariable( "userAccount", $userAccount );
 $tpl->setVariable( 'view_parameters', $UserParameters );
+$tpl->setVariable( 'site_access', $GLOBALS['eZCurrentAccess'] );
 
 $Result = array();
 $Result['content'] = $tpl->fetch( "design:user/edit.tpl" );
