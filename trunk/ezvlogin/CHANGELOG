@@ -22,3 +22,4 @@ eZVlogin CHANGELOG
 + Set cache-control to avoid proxy caching login / logout ( shoudl probably have a setting for this )
 + Added eZ Publish 4.1 support (look for 'eZSession' class)
 + Added support for view_parameters in vlogin/edit
++ Fixed redirection to user/register in vlogin/login

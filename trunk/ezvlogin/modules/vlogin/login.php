@@ -373,7 +373,7 @@ else
 
 if ( $http->hasPostVariable( "RegisterButton" ) )
 {
-    $Module->redirectToView( 'register' );
+    $Module->redirectTo( 'user/register' );
 }
 
 $userIsNotAllowedToLogin = false;
