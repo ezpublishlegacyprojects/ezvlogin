@@ -79,12 +79,17 @@ if ( $Module->isCurrentAction( "Edit" ) )
     return;
 }
 
+if ( !isset( $UserID ) && $currentUser->isAnonymous() )
+    return $Module->handleError( eZError::KERNEL_ACCESS_DENIED, 'kernel' );
+
 $userAccount = eZUser::fetch( $UserID );
 if ( !$userAccount )
     return $Module->handleError( eZError::KERNEL_NOT_AVAILABLE, 'kernel' );
+
 $userObject = $userAccount->attribute( 'contentobject' );
 if ( !$userObject )
     return $Module->handleError( eZError::KERNEL_NOT_AVAILABLE, 'kernel' );
+
 if ( !$userObject->canEdit( ) )
     return $Module->handleError( eZError::KERNEL_ACCESS_DENIED, 'kernel' );
 
