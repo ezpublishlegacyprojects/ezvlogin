@@ -87,7 +87,7 @@ class eZVLoginHelper
             if ( $http->getVariable( 'ezvloginSSOStart' ) == $currentURI )
                 return $http->getVariable( 'ezvloginRedirectURI' );
             else
-                eZDebug::writeNotice( 'Not current url: ' . $http->getVariable( 'ezvloginSSOStart' ), 'eZVLoginHelper::isSSOStart' );
+                eZDebug::writeNotice( 'Not current url: ' . $http->getVariable( 'ezvloginSSOStart' ), __METHOD__ );
         }
         return false;
     }
@@ -98,9 +98,14 @@ class eZVLoginHelper
     */
     public static function doSSORedirect( eZModule $Module, $redirectionURI )
     {
+        $http       = eZHTTPTool::instance();
+        
+        // first do internal sso call, as it will exit request if called
+        // from another server to save full page generation
+        self::doSSORemoteCall( $Module, $http );
+
         $currentURI = eZSys::serverURL() . eZSys::indexDir();
         $siteIndex  = self::IndexOfSite( $currentURI, $redirectList );
-        $http       = eZHTTPTool::instance();
 
         // return SSO redirect url if we found currentURI in redirect list
         if ( $siteIndex !== false && $siteIndex !== -1 && is_numeric( $siteIndex ) )
@@ -132,14 +137,15 @@ class eZVLoginHelper
             {
                 $uri .= '&ezvloginSSOStart=' . $currentURI . '&ezvloginRedirectURI=' . $redirectionURI;
             }
-            return $Module->redirectTo( $uri );
+
+            $redirectionURI = $uri;
         }
         elseif ( $siteIndex === -1 )
         {
-            eZDebug::writeNotice( 'Unvalid site index: ' . $siteIndex, 'eZVLoginHelper::doSSORedirect' );
+            eZDebug::writeNotice( 'Unvalid site index: ' . $siteIndex, __METHOD__ );
         }
 
-        // return normal redirect
+        // return redirect uri
         return $Module->redirectTo( $redirectionURI );
     }
 
@@ -165,6 +171,147 @@ class eZVLoginHelper
             return -1;
         }
         return false;
+    }
+
+    public static function doSSORemoteCall( eZModule $Module, eZHTTPTool $http )
+    {
+        if ( $http->hasGetVariable( 'RemoteSSO' ) )
+        {
+            eZDB::checkTransactionCounter();
+            eZExecution::cleanExit();
+        }
+
+        $vIni = eZINI::instance( 'vlogin.ini' );
+        if ( $vIni->hasVariable( 'SSOSettings', 'InternalList' ) )
+        {
+            if ( $Module->isCurrentAction( 'Login' ) )
+            {
+                $uri = '/vlogin/login/?UserLogin=' . rawurlencode( $Module->actionParameter( 'UserLogin' ) );
+                $uri .= '&UserPassword=' . rawurlencode( $Module->actionParameter( 'UserPassword' ) );
+            }
+            else
+            {
+                $uri = '/vlogin/logout/?';
+            }
+
+            $uri .= '&RemoteSSO=true';
+
+            $ipList = $vIni->variable( 'SSOSettings', 'InternalList' );
+            $currentIp = eZSys::serverVariable( 'SERVER_ADDR' );
+            foreach( $ipList as $remoteIp => $remoteUri  )
+            {
+                if ( $currentIp != $remoteIp )
+                {
+                    self::callRemoteServerAndSetCookies( $remoteUri . $uri );
+                }
+            }
+        }
+    }
+
+    public static function callRemoteServerAndSetCookies( $uri, $port = 80, $timeOut = 20 )
+    {
+        preg_match( "/^((http[s]?:\/\/)([a-zA-Z0-9_\-.:]+))?([\/]?[~]?(\.?[^.]+[~]?)*)/i", $uri, $matches );
+        
+        $protocol = $matches[2];
+        $host = $matches[3];
+        $path = $matches[4];
+        $errorNumber = '';
+        $errorString = '';
+
+        if ( strpos( $host, ':') )
+        {
+            $host = explode( ':', $host );
+            $port = $host[1];
+            $host = $host[0];
+        }
+
+        if ( !$protocol || $protocol === 'https://' )
+        {
+            $filename = 'ssl://' . $host;
+        }
+        else
+        {
+            $filename = 'tcp://' . $host;
+        }
+
+        // Try to connect to server 
+        $fp = fsockopen( $filename,
+                         $port,
+                         $errorNumber,
+                         $errorString,
+                         $timeOut );
+        if ( !$fp )
+        {
+            eZDebug::writeError( 'Error connecting to: ' . $host .':'. $port . " error string: $errorString ($errorNumber)" , __METHOD__ );
+            return '';
+        }
+
+        $request = 'GET ' . $path . ' ' . $_SERVER['SERVER_PROTOCOL'] . "\r\n" .
+             "Host: $host\r\n" .
+             "Accept: */*\r\n" .
+             "Content-type: application/x-www-form-urlencoded\r\n" .
+             "Content-length: 0\r\n" .
+             "User-Agent: " . $_SERVER['HTTP_USER_AGENT'] . "\r\n" .
+             "Pragma: no-cache\r\n" .
+             "Connection: close\r\n";
+
+        // Add cookies to request header
+        $cookieStr = '';
+        foreach( $_COOKIE as $cookie => $value )
+        {
+            $cookieStr .= " $cookie=$value;";
+        }
+        if ( $cookieStr !== '' )
+        {
+            $request .= 'Cookie:' . $cookieStr . "\r\n";
+        }
+        // End request header with an empty line
+        $request .= "\r\n";
+
+        eZDebug::writeDebug( $request, __METHOD__ );
+
+        fputs( $fp, $request );
+
+
+        stream_set_blocking( $fp, true );
+        stream_set_timeout( $fp, $timeOut );
+        $info = stream_get_meta_data( $fp );
+        $buf = '';
+
+        while ( !feof($fp) && !$info['timed_out'] )
+        {
+                $buf .= fgets($fp, 4096);
+                $info = stream_get_meta_data($fp);
+        }
+        fclose( $fp );
+
+        if ( $info['timed_out'] )
+        {
+            eZDebug::writeWarning('Connection timeout: ' . $uri, __METHOD__ );
+            return '';
+        }
+        else if ( !$buf )
+        {
+            eZDebug::writeWarning('Uri returned empty: ' . $uri, __METHOD__);
+            return '';
+        }
+
+        $wwwDir = eZSys::wwwDir();
+        // On host based site accesses this can be empty, causing the cookie to be set for the current dir,
+        // but we want it to be set for the whole eZ publish site
+        $cookiePath = $wwwDir !== '' ? $wwwDir : '/';
+
+        //Set-Cookie: eZSESSID57c7d11cd49333e3f722204c63016da9=18fuiffemiuru1d81h9qmfhcs3; path=/
+        if ( preg_match_all( "/\nSet-Cookie: ([a-zA-Z0-9_\-.:]+)=([a-zA-Z0-9_\-.:]+);/i", $buf, $matches ) )
+        {
+            foreach( $matches[1] as $i => $cookieName )
+            {
+                if ( !isset( $_COOKIE[$cookieName] ) && isset( $matches[2][$i] ) )
+                {
+                    setcookie( $cookieName, $matches[2][$i], 0, $cookiePath );
+                }
+            }
+        }
     }
 }
 

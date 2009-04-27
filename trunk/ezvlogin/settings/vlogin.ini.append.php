@@ -30,10 +30,20 @@ CookieValue=true
 # or in virtual host mode:
 # RedirectList[]=http://example.com
 # Note: all sites need to have this extension and same RedirectList setting
-# Note2: Uses GET parameters, so will not work on (fast)CGI setup unless in vhost setup
+# Note2: Uses GET parameters, so will probably not work on (fast)CGI setup unless in vhost setup
 #RedirectList[]
 #RedirectList[]=http://trunk:81
 #RedirectList[]=http://nor.trunk:81
+
+# Internal list is for sso with several servers that work with same domain name
+# (forinstance behind loadbalancer) and you set up differen session cookie names
+# for each server so they don't crash.
+# Calls the other servers but self directly instead of using redirection, uses
+# ip to be able to identify current server.
+# Note: Same comments as RedirectList[] applies to InternalList[] as well
+#InternalList[]
+#InternalList[127.0.0.1]=http://localhost/ezp/index.php
+#InternalList[88.104.5.36]=http://example.com
 
 
 */ ?>
