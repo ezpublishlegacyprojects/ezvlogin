@@ -198,11 +198,16 @@ class eZVLoginHelper
 
             $ipList = $vIni->variable( 'SSOSettings', 'InternalList' );
             $currentIp = eZSys::serverVariable( 'SERVER_ADDR' );
-            foreach( $ipList as $remoteIp => $remoteUri  )
+
+            // only do internal sso if current server is part of sso setup
+            if ( isset( $ipList[ $currentIp ] ) )
             {
-                if ( $currentIp != $remoteIp )
+                foreach( $ipList as $remoteIp => $remoteUri  )
                 {
-                    self::callRemoteServerAndSetCookies( $remoteUri . $uri );
+                    if ( $currentIp != $remoteIp )
+                    {
+                        self::callRemoteServerAndSetCookies( $remoteUri . $uri );
+                    }
                 }
             }
         }

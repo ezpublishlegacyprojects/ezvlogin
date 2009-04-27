@@ -41,6 +41,7 @@ CookieValue=true
 # Calls the other servers but self directly instead of using redirection, uses
 # ip to be able to identify current server.
 # Note: Same comments as RedirectList[] applies to InternalList[] as well
+# Note2: SSO call will only be done if current server ip is defined in list
 #InternalList[]
 #InternalList[127.0.0.1]=http://localhost/ezp/index.php
 #InternalList[88.104.5.36]=http://example.com
