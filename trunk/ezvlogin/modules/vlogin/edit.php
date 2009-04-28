@@ -5,7 +5,7 @@
 // ## BEGIN COPYRIGHT, LICENSE AND WARRANTY NOTICE ##
 // SOFTWARE NAME: eZ Publish
 // SOFTWARE RELEASE: 4.1.x
-// COPYRIGHT NOTICE: Copyright (C) 1999-2008 eZ Systems AS
+// COPYRIGHT NOTICE: Copyright (C) 1999-2009 eZ Systems AS
 // SOFTWARE LICENSE: GNU General Public License v2.0
 // NOTICE: >
 //   This program is free software; you can redistribute it and/or
@@ -26,16 +26,8 @@
 // ## END COPYRIGHT, LICENSE AND WARRANTY NOTICE ##
 //
 
-//include_once( "kernel/classes/datatypes/ezuser/ezuser.php" );
-//include_once( "lib/ezutils/classes/ezhttptool.php" );
-//include_once( "kernel/classes/ezcontentclass.php" );
-//include_once( "kernel/classes/ezcontentclassattribute.php" );
-//include_once( "kernel/classes/ezcontentobject.php" );
-//include_once( "kernel/classes/ezcontentobjectattribute.php" );
-
 
 $currentUser = eZUser::currentUser();
-$currentUserID = $currentUser->attribute( "contentobject_id" );
 $http = eZHTTPTool::instance();
 $Module = $Params['Module'];
 
@@ -48,10 +40,10 @@ else
     $UserParameters = array();
 }
 
-if ( isset( $Params["UserID"] ) )
+if ( isset( $Params["UserID"] ) && is_numeric( $Params["UserID"] ) )
     $UserID = $Params["UserID"];
 else if ( !$currentUser->isAnonymous() )
-    $UserID = $currentUserID;
+    $UserID = $currentUser->attribute( "contentobject_id" );
 
 if ( $Module->isCurrentAction( "ChangePassword" ) )
 {

@@ -5,7 +5,7 @@
 // ## BEGIN COPYRIGHT, LICENSE AND WARRANTY NOTICE ##
 // SOFTWARE NAME: eZ Publish
 // SOFTWARE RELEASE: 4.1.x
-// COPYRIGHT NOTICE: Copyright (C) 1999-2008 eZ Systems AS
+// COPYRIGHT NOTICE: Copyright (C) 1999-2009 eZ Systems AS
 // SOFTWARE LICENSE: GNU General Public License v2.0
 // NOTICE: >
 //   This program is free software; you can redistribute it and/or
@@ -26,12 +26,7 @@
 // ## END COPYRIGHT, LICENSE AND WARRANTY NOTICE ##
 //
 
-//include_once( 'lib/ezutils/classes/ezhttptool.php' );
-//include_once( 'kernel/classes/datatypes/ezuser/ezuser.php' );
 require_once( 'kernel/common/template.php' );
-//include_once( 'lib/ezutils/classes/ezini.php' );
-//include_once( 'kernel/classes/datatypes/ezuser/ezuserloginhandler.php' );
-
 include_once( 'extension/ezvlogin/classes/ezvloginhelper.php' );
 
 //$Module->setExitStatus( EZ_MODULE_STATUS_SHOW_LOGIN_PAGE );
@@ -75,7 +70,7 @@ if ( $http->hasGetVariable( 'UserLogin' ) )
 if ( $Module->isCurrentAction( 'Login' ) and
      $Module->hasActionParameter( 'UserLogin' ) and
      $Module->hasActionParameter( 'UserPassword' ) and
-     !$http->hasPostVariable( 'RegisterButton' )
+     !$http->hasPostVariable( "RegisterButton" )
      )
 {
     $userLogin = $Module->actionParameter( 'UserLogin' );
@@ -154,43 +149,50 @@ if ( $Module->isCurrentAction( 'Login' ) and
             $user = $userClass->loginUser( $userLogin, $userPassword );
             if ( $user instanceof eZUser )
             {
-                $access = $GLOBALS['eZCurrentAccess'];
-                $siteAccessResult = $user->hasAccessTo( 'user', 'login' );
-                $hasAccessToSite = false;
-                // A check that the user has rights to access current siteaccess.
-                if ( $siteAccessResult[ 'accessWord' ] == 'limited' )
+                // first 4.1 code, then 4.0
+                if ( is_callable( array( $user, 'canLoginToSiteAccess' ) ) )
                 {
-                    $siteNameCRC = eZSys::ezcrc32( $access[ 'name' ] );
-                    //include_once( 'lib/ezutils/classes/ezsys.php' );
-
-                    $policyChecked = false;
-                    foreach ( $siteAccessResult['policies'] as $policy )
-                    {
-                        if ( isset( $policy['SiteAccess'] ) )
-                        {
-                            $policyChecked = true;
-                            if ( in_array( $siteNameCRC, $policy['SiteAccess'] ) )
-                            {
-                                $hasAccessToSite = true;
-                                break;
-                            }
-                        }
-                        if ( $hasAccessToSite )
-                            break;
-                    }
-                    if ( !$policyChecked )
-                        $hasAccessToSite = true;
+                    $hasAccessToSite = $user->canLoginToSiteAccess( $GLOBALS['eZCurrentAccess'] );
                 }
-                else if ( $siteAccessResult[ 'accessWord' ] == 'yes' )
+                else
                 {
-                    $hasAccessToSite = true;
+                    $access = $GLOBALS['eZCurrentAccess'];
+                    $siteAccessResult = $user->hasAccessTo( 'user', 'login' );
+                    $hasAccessToSite = false;
+                    // A check that the user has rights to access current siteaccess.
+                    if ( $siteAccessResult[ 'accessWord' ] == 'limited' )
+                    {
+                        $siteNameCRC = eZSys::ezcrc32( $access[ 'name' ] );
+
+                        $policyChecked = false;
+                        foreach ( $siteAccessResult['policies'] as $policy )
+                        {
+                            if ( isset( $policy['SiteAccess'] ) )
+                            {
+                                $policyChecked = true;
+                                if ( in_array( $siteNameCRC, $policy['SiteAccess'] ) )
+                                {
+                                    $hasAccessToSite = true;
+                                    break;
+                                }
+                            }
+                            if ( $hasAccessToSite )
+                                break;
+                        }
+                        if ( !$policyChecked )
+                            $hasAccessToSite = true;
+                    }
+                    else if ( $siteAccessResult[ 'accessWord' ] == 'yes' )
+                    {
+                        $hasAccessToSite = true;
+                    }
                 }
                 // If the user doesn't have the rights.
                 if ( !$hasAccessToSite )
                 {
                     $user->logoutCurrent();
                     $user = null;
-                    $siteAccessName = $access['name'];
+                    $siteAccessName = $GLOBALS['eZCurrentAccess']['name'];
                     $siteAccessAllowed = false;
                 }
                 break;
@@ -347,7 +349,6 @@ if ( $Module->isCurrentAction( 'Login' ) and
         $http->setSessionVariable( 'eZUserLoggedInID', $userID );
 
         // Remove all temporary drafts
-        //include_once( 'kernel/classes/ezcontentobject.php' );
         eZContentObject::cleanupAllInternalDrafts( $userID );
 
         // check if we're should do SSO or just do a normal redirect

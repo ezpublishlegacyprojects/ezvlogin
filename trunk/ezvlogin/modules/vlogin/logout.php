@@ -5,7 +5,7 @@
 // ## BEGIN COPYRIGHT, LICENSE AND WARRANTY NOTICE ##
 // SOFTWARE NAME: eZ Publish
 // SOFTWARE RELEASE: 4.1.x
-// COPYRIGHT NOTICE: Copyright (C) 1999-2008 eZ Systems AS
+// COPYRIGHT NOTICE: Copyright (C) 1999-2009 eZ Systems AS
 // SOFTWARE LICENSE: GNU General Public License v2.0
 // NOTICE: >
 //   This program is free software; you can redistribute it and/or
@@ -26,8 +26,6 @@
 // ## END COPYRIGHT, LICENSE AND WARRANTY NOTICE ##
 //
 
-//include_once( "lib/ezutils/classes/ezhttptool.php" );
-//include_once( "kernel/classes/datatypes/ezuser/ezuser.php" );
 include_once( 'extension/ezvlogin/classes/ezvloginhelper.php' );
 
 $Module = $Params['Module'];
@@ -40,12 +38,11 @@ if ( ($redirectionURI = eZVLoginHelper::isSSOStart( $Module )) !== false )
     return $Module->redirectTo( $redirectionURI );
 }
 
-$ini    = eZINI::instance();
-$user   = eZUser::instance();
-$http   = eZHTTPTool::instance();
+$http = eZHTTPTool::instance();
+
+$user = eZUser::instance();
 
 // Remove all temporary drafts
-//include_once( 'kernel/classes/ezcontentobject.php' );
 eZContentObject::cleanupAllInternalDrafts( $user->attribute( 'contentobject_id' ) );
 
 // Remove eZVLogin cookies
@@ -55,7 +52,15 @@ $user->logoutCurrent();
 
 $http->setSessionVariable( 'force_logout', 1 );
 
-$redirectURL = $ini->variable( 'UserSettings', 'LogoutRedirect' );
+$ini = eZINI::instance();
+if ( $ini->variable( 'UserSettings', 'RedirectOnLogoutWithLastAccessURI' ) == 'enabled' && $http->hasSessionVariable( 'LastAccessesURI'))
+{
+    $redirectURL = $http->sessionVariable( "LastAccessesURI" );
+}
+else
+{
+    $redirectURL = $ini->variable( 'UserSettings', 'LogoutRedirect' );
+}
 
 // check if we're should do SSO or just do a normal redirect
 return eZVLoginHelper::doSSORedirect( $Module, $redirectURL );
