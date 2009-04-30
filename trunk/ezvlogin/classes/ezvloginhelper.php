@@ -187,14 +187,12 @@ class eZVLoginHelper
             if ( $Module->isCurrentAction( 'Login' ) )
             {
                 $uri = '/vlogin/login/?UserLogin=' . rawurlencode( $Module->actionParameter( 'UserLogin' ) );
-                $uri .= '&UserPassword=' . rawurlencode( $Module->actionParameter( 'UserPassword' ) );
+                $uri .= '&UserPassword=' . rawurlencode( $Module->actionParameter( 'UserPassword' ) ) . '&RemoteSSO=true';
             }
             else
             {
-                $uri = '/vlogin/logout/?';
+                $uri = '/vlogin/logout/?RemoteSSO=true';
             }
-
-            $uri .= '&RemoteSSO=true';
 
             $ipList = $vIni->variable( 'SSOSettings', 'InternalList' );
             $currentIp = eZSys::serverVariable( 'SERVER_ADDR' );
