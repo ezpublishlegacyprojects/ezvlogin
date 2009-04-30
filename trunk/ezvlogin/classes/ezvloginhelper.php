@@ -311,7 +311,8 @@ class eZVLoginHelper
         {
             foreach( $matches[1] as $i => $cookieName )
             {
-                if ( !isset( $_COOKIE[$cookieName] ) && isset( $matches[2][$i] ) )
+                //if ( !isset( $_COOKIE[$cookieName] ) && isset( $matches[2][$i] ) ) // need to reset session cookies for other site on login / logout
+                if ( isset( $matches[2][$i] ) )
                 {
                     setcookie( $cookieName, $matches[2][$i], 0, $cookiePath );
                 }
