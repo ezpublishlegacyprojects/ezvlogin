@@ -314,7 +314,10 @@ class eZVLoginHelper
                 //if ( !isset( $_COOKIE[$cookieName] ) && isset( $matches[2][$i] ) ) // need to reset session cookies for other site on login / logout
                 if ( isset( $matches[2][$i] ) )
                 {
-                    setcookie( $cookieName, $matches[2][$i], 0, $cookiePath );
+                    if ( $matches[2][$i] === 'deleted' )//this could need some improvment so not reg cookies with value 'deleted' are remeoved
+                        setcookie( $cookieName, false, 0, $cookiePath );
+                    else
+                        setcookie( $cookieName, $matches[2][$i], 0, $cookiePath );
                 }
             }
         }
