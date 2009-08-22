@@ -61,6 +61,12 @@ $ViewList['edit'] = array(
                                     'EditButton' => 'Edit' ),
     'params' => array( 'UserID' ) );
 
+$ViewList['profile'] = array(
+    'functions' => array( 'login' ),
+    'script' => 'profile.php',
+    'default_navigation_part' => 'ezusernavigationpart',
+    'params' => array( 'UserID' ) );
+
 $SiteAccess = array(
     'name'=> 'SiteAccess',
     'values'=> array(),
