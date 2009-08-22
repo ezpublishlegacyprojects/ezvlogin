@@ -47,7 +47,7 @@ if ( isset( $Params['UserID'] ) && is_numeric( $Params['UserID'] ) )
 else if ( !$currentUser->isAnonymous() )
 {
     $UserID = $currentUser->attribute( 'contentobject_id' );
-    publicProfile = false;
+    $publicProfile = false;
 }
 else
 {
