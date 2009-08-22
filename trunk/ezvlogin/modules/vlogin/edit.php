@@ -29,7 +29,6 @@
 
 $currentUser = eZUser::currentUser();
 $Module = $Params['Module'];
-$publicProfile = true;
 
 if ( isset( $Params['UserParameters'] ) )
 {
@@ -47,7 +46,6 @@ if ( isset( $Params['UserID'] ) && is_numeric( $Params['UserID'] ) )
 else if ( !$currentUser->isAnonymous() )
 {
     $UserID = $currentUser->attribute( 'contentobject_id' );
-    $publicProfile = false;
 }
 else
 {
@@ -99,7 +97,6 @@ $tpl->setVariable( "module", $Module );
 $tpl->setVariable( "http", $http );
 $tpl->setVariable( "userID", $UserID );
 $tpl->setVariable( "userAccount", $userAccount );
-$tpl->setVariable( "public_profile", $publicProfile );
 $tpl->setVariable( 'view_parameters', $UserParameters );
 $tpl->setVariable( 'site_access', $GLOBALS['eZCurrentAccess'] );
 
