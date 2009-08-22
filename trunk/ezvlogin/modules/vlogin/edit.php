@@ -28,8 +28,8 @@
 
 
 $currentUser = eZUser::currentUser();
-$http = eZHTTPTool::instance();
 $Module = $Params['Module'];
+$publicProfile = true;
 
 if ( isset( $Params['UserParameters'] ) )
 {
@@ -40,10 +40,19 @@ else
     $UserParameters = array();
 }
 
-if ( isset( $Params["UserID"] ) && is_numeric( $Params["UserID"] ) )
-    $UserID = $Params["UserID"];
+if ( isset( $Params['UserID'] ) && is_numeric( $Params['UserID'] ) )
+{
+    $UserID = $Params['UserID'];
+}
 else if ( !$currentUser->isAnonymous() )
-    $UserID = $currentUser->attribute( "contentobject_id" );
+{
+    $UserID = $currentUser->attribute( 'contentobject_id' );
+    publicProfile = false;
+}
+else
+{
+    return $Module->handleError( eZError::KERNEL_ACCESS_DENIED, 'kernel' );
+}
 
 if ( $Module->isCurrentAction( "ChangePassword" ) )
 {
@@ -63,6 +72,8 @@ if ( $Module->isCurrentAction( "Cancel" ) )
     return;
 }
 
+$http = eZHTTPTool::instance();
+
 if ( $Module->isCurrentAction( "Edit" ) )
 {
     $selectedVersion = $http->hasPostVariable( 'SelectedVersion' ) ? $http->postVariable( 'SelectedVersion' ) : 'f';
@@ -70,9 +81,6 @@ if ( $Module->isCurrentAction( "Edit" ) )
     $Module->redirectTo( '/content/edit/' . $UserID . '/' . $selectedVersion . '/' . $editLanguage );
     return;
 }
-
-if ( !isset( $UserID ) && $currentUser->isAnonymous() )
-    return $Module->handleError( eZError::KERNEL_ACCESS_DENIED, 'kernel' );
 
 $userAccount = eZUser::fetch( $UserID );
 if ( !$userAccount )
@@ -91,6 +99,7 @@ $tpl->setVariable( "module", $Module );
 $tpl->setVariable( "http", $http );
 $tpl->setVariable( "userID", $UserID );
 $tpl->setVariable( "userAccount", $userAccount );
+$tpl->setVariable( "public_profile", $publicProfile );
 $tpl->setVariable( 'view_parameters', $UserParameters );
 $tpl->setVariable( 'site_access', $GLOBALS['eZCurrentAccess'] );
 
